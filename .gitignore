@@ -1,0 +1,68 @@
+# ==========================================
+# EcoCalm — Git Ignore Rules
+# ==========================================
+
+# Dependencies
+node_modules/
+*/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Production & Build Outputs
+dist/
+frontend/dist/
+build/
+out/
+.next/
+
+# Environment Variables & Secrets
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+*.env.*
+backend/.env
+frontend/.env
+
+# Database & Persistent Volumes
+mongo-data/
+data/db/
+*.sqlite
+*.sqlite3
+
+# Operating System & Filesystem
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# IDE & Editor Settings
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+*.sublime-project
+*.sublime-workspace
+
+# Testing & Code Coverage
+coverage/
+.nyc_output/
+*.lcov
+
+# Temporary files & Caches
+.cache/
+.parcel-cache/
+.eslintcache
+*.tmp
+*.temp
+

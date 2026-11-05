@@ -1,0 +1,24 @@
+{
+  "name": "stitch-ecocalm-platform",
+  "version": "1.0.0",
+  "description": "EcoCalm - Digital Well-Being & Anti-Burnout Platform (MERN + Docker)",
+  "scripts": {
+    "dev:backend": "cd backend && npm start",
+    "dev:frontend": "cd frontend && npm run dev",
+    "start": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "docker:build": "docker compose build",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down"
+  },
+  "keywords": [
+    "mern",
+    "wellbeing",
+    "mindfulness",
+    "react",
+    "docker",
+    "frontend",
+    "backend"
+  ],
+  "author": "EcoCalm Sanctuary",
+  "license": "ISC"
+}
