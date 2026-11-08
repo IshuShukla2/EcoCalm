@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import confetti from "canvas-confetti";
 import { soundscape } from "../utils/soundscapes";
 
@@ -15,13 +15,24 @@ export const EcoCalmProvider = ({ children }) => {
     }
   };
 
-  const savedUser = getSavedUser();
-  const [isAuthenticated, setIsAuthenticated] = useState(Boolean(savedUser));
+  const getSavedToken = () => {
+    try {
+      return localStorage.getItem("ecocalm_token") || null;
+    } catch (e) {
+      return null;
+    }
+  };
+
+  const initialSavedUser = getSavedUser();
+  const initialSavedToken = getSavedToken();
+
+  const [token, setToken] = useState(initialSavedToken);
+  const [isAuthenticated, setIsAuthenticated] = useState(Boolean(initialSavedUser && initialSavedToken));
   const [user, setUser] = useState(
-    savedUser || {
+    initialSavedUser || {
       name: "Guest",
       tagline: "Exploring Sanctuary",
-      avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuD2whyhBjn4A9SnEMzocCRmpZP4ZEqmpJ-zWeW23kmuur800au6BqfdYcmvuwTzO79WzC_neRaecdYdFzxrWI45DuCG6rwzNFEUzVaqidljRlDiMlGT_MSXJq5Bqg6DCHCsacno2GMG-rbsJe5Cv7KQB01D4qvRh7qT9Dvw6fh49e89ImV44CfxDLOv6nk-_mdQir7iuP4e_KzmsrZPEM-PNjQETIJFP7OenqynM0Hg6_y8eiUn2A1B_w",
+      avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=ecocalm_guest",
       waterDrops: 0,
       offlineMinutesToday: 0,
       questsCompletedToday: 0,
@@ -31,108 +42,64 @@ export const EcoCalmProvider = ({ children }) => {
     }
   );
 
-  const [activeTab, setActiveTab] = useState(savedUser ? (savedUser.role === "admin" ? "admin" : "home") : "landing");
+  // Active navigation tab
+  // 1. plant, 2. vibe_before, 3. breathe, 4. news, 5. hobbies, 6. vibe_after, 7. helpline, admin, landing
+  const [activeTab, setActiveTab] = useState(
+    initialSavedUser ? (initialSavedUser.role === "admin" ? "plant" : "plant") : "landing"
+  );
+
+  const [plant, setPlant] = useState({
+    name: "My Gentle Companion",
+    variety: "Monstera Deliciosa",
+    plantType: "monstera",
+    stage: 1,
+    stageTitle: "Tender Seedling",
+    hydration: 50,
+    dropsNeededForNextBloom: 30,
+    totalDropsPoured: 20,
+    targetDropsNextStage: 50,
+    potStyle: "ceramic_ribbed",
+    flowerType: "rose_bud",
+    companion: "butterfly",
+    companionName: "Blue Morpho",
+    hasSelectedSeed: false,
+    lastWatered: "Just now"
+  });
+
+  const [moodLogs, setMoodLogs] = useState([]);
+  const [vibeBefore, setVibeBefore] = useState(null);
+  const [vibeAfter, setVibeAfter] = useState(null);
+
+  const [newsArticles, setNewsArticles] = useState([]);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authModalMode, setAuthModalMode] = useState("login"); // "login" | "signup"
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
   const [isHelplineOpen, setIsHelplineOpen] = useState(false);
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
-
-  const openAuthModal = (mode = "login") => {
-    setAuthModalMode(mode);
-    setIsAuthModalOpen(true);
-  };
-
-  const closeAuthModal = () => {
-    setIsAuthModalOpen(false);
-  };
-
-  const openAvatarModal = () => setIsAvatarModalOpen(true);
-  const closeAvatarModal = () => setIsAvatarModalOpen(false);
-
-  const openHelpline = () => setIsHelplineOpen(true);
-  const closeHelpline = () => setIsHelplineOpen(false);
-
-  const openFeedback = () => setIsFeedbackOpen(true);
-  const closeFeedback = () => setIsFeedbackOpen(false);
-
-
-  const updateUserAvatar = async (newAvatarUrl) => {
-    const updatedUser = { ...user, avatar: newAvatarUrl };
-    setUser(updatedUser);
-    try {
-      localStorage.setItem("ecocalm_user", JSON.stringify(updatedUser));
-      await fetch("/api/user", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ avatar: newAvatarUrl })
-      });
-    } catch (e) {
-      // safe fallback
-    }
-    triggerCelebration();
-    showToast("Profile picture updated! 🌸", "account_circle");
-  };
-
-  const loginUser = (userData, token) => {
-    setUser(userData);
-    setIsAuthenticated(true);
-    try {
-      localStorage.setItem("ecocalm_user", JSON.stringify(userData));
-      if (token) localStorage.setItem("ecocalm_token", token);
-    } catch (e) {}
-    if (userData.role === "admin") {
-      setActiveTab("admin");
-    } else {
-      setActiveTab("home");
-    }
-    setIsAuthModalOpen(false);
-    triggerCelebration();
-    const displayName = (userData.name || "Mindful Soul").split(" ")[0];
-    showToast(userData.role === "admin" ? `Welcome Admin, ${displayName}! 🛡️` : `Welcome back, ${displayName}! 🌸`, "local_florist");
-  };
-
-  const logoutUser = () => {
-    try {
-      localStorage.removeItem("ecocalm_user");
-      localStorage.removeItem("ecocalm_token");
-    } catch (e) {}
-    setIsAuthenticated(false);
-    setUser({
-      name: "Guest",
-      tagline: "Exploring Sanctuary",
-      avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuD2whyhBjn4A9SnEMzocCRmpZP4ZEqmpJ-zWeW23kmuur800au6BqfdYcmvuwTzO79WzC_neRaecdYdFzxrWI45DuCG6rwzNFEUzVaqidljRlDiMlGT_MSXJq5Bqg6DCHCsacno2GMG-rbsJe5Cv7KQB01D4qvRh7qT9Dvw6fh49e89ImV44CfxDLOv6nk-_mdQir7iuP4e_KzmsrZPEM-PNjQETIJFP7OenqynM0Hg6_y8eiUn2A1B_w",
-      waterDrops: 0
-    });
-    setActiveTab("landing");
-    showToast("Logged out peacefully. See you soon 🌙", "logout");
-  };
-
-  const [plant, setPlant] = useState({
-    name: "Sir Photosynth-is",
-    variety: "Delulu Monstera Variegata",
-    plantType: "monstera",
-    stage: 3,
-    stageTitle: "Flourishing Sapling",
-    hydration: 78,
-    dropsNeededForNextBloom: 28,
-    totalDropsPoured: 162,
-    targetDropsNextStage: 200,
-    potStyle: "ceramic_ribbed",
-    companion: "butterfly",
-    companionName: "Blue Morpho",
-    lastWatered: "2 hours ago"
-  });
-
-  const [quests, setQuests] = useState([]);
-  const [stories, setStories] = useState([]);
-  const [posts, setPosts] = useState([]);
-  const [moodLogs, setMoodLogs] = useState([]);
   const [isDoomscrollOpen, setIsDoomscrollOpen] = useState(false);
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const [currentSound, setCurrentSound] = useState("rain");
   const [toast, setToast] = useState(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Authenticated fetch wrapper
+  const authFetch = useCallback(
+    async (url, options = {}) => {
+      const currentToken = token || localStorage.getItem("ecocalm_token");
+      const headers = {
+        "Content-Type": "application/json",
+        ...(options.headers || {})
+      };
+      if (currentToken) {
+        headers["Authorization"] = `Bearer ${currentToken}`;
+      }
+      if (user?.id) {
+        headers["x-user-id"] = user.id;
+      }
+      return fetch(url, { ...options, headers });
+    },
+    [token, user?.id]
+  );
 
   const showToast = (message, icon = "spa") => {
     setToast({ message, icon });
@@ -147,47 +114,221 @@ export const EcoCalmProvider = ({ children }) => {
         origin: { y: 0.7 },
         colors: ["#70702e", "#ffcfcb", "#cbca7e", "#e2e6c0"]
       });
-    } catch (e) {
-      // safe fallback
-    }
+    } catch (e) {}
   };
 
-  // Fetch initial data from server
-  useEffect(() => {
-    const loadAll = async () => {
-      try {
-        const [uRes, pRes, qRes, sRes, cRes, mRes] = await Promise.all([
-          fetch("/api/user").catch(() => null),
-          fetch("/api/plant").catch(() => null),
-          fetch("/api/quests").catch(() => null),
-          fetch("/api/stories").catch(() => null),
-          fetch("/api/community").catch(() => null),
-          fetch("/api/mood").catch(() => null)
-        ]);
+  const openAuthModal = (mode = "login") => {
+    setAuthModalMode(mode);
+    setIsAuthModalOpen(true);
+  };
 
-        if (uRes && uRes.ok) {
-          const fetchedUser = await uRes.json();
-          // Only overwrite user if user is authenticated
-          if (isAuthenticated) setUser(fetchedUser);
-        }
-        if (pRes && pRes.ok) setPlant(await pRes.json());
-        if (qRes && qRes.ok) setQuests(await qRes.json());
-        if (sRes && sRes.ok) setStories(await sRes.json());
-        if (cRes && cRes.ok) setPosts(await cRes.json());
-        if (mRes && mRes.ok) setMoodLogs(await mRes.json());
-      } catch (err) {
-        console.warn("Using offline memory context");
+  const closeAuthModal = () => setIsAuthModalOpen(false);
+  const openAvatarModal = () => setIsAvatarModalOpen(true);
+  const closeAvatarModal = () => setIsAvatarModalOpen(false);
+  const openHelpline = () => setIsHelplineOpen(true);
+  const closeHelpline = () => setIsHelplineOpen(false);
+  const openFeedback = () => setIsFeedbackOpen(true);
+  const closeFeedback = () => setIsFeedbackOpen(false);
+
+  // Load user data specifically for the logged-in account
+  const refreshUserData = useCallback(async () => {
+    if (!isAuthenticated) return;
+    try {
+      const [uRes, pRes, mRes] = await Promise.all([
+        authFetch("/api/user").catch(() => null),
+        authFetch("/api/plant").catch(() => null),
+        authFetch("/api/mood").catch(() => null)
+      ]);
+
+      if (uRes && uRes.ok) {
+        const userData = await uRes.json();
+        setUser(userData);
+        localStorage.setItem("ecocalm_user", JSON.stringify(userData));
       }
-    };
-    loadAll();
-  }, [isAuthenticated]);
+
+      if (pRes && pRes.ok) {
+        const plantData = await pRes.json();
+        setPlant(plantData);
+      }
+
+      if (mRes && mRes.ok) {
+        const logs = await mRes.json();
+        setMoodLogs(logs);
+        // Find latest before and after checks
+        const latestBefore = logs.find((l) => l.checkinType === "before");
+        const latestAfter = logs.find((l) => l.checkinType === "after");
+        if (latestBefore) setVibeBefore(latestBefore);
+        if (latestAfter) setVibeAfter(latestAfter);
+      }
+    } catch (err) {
+      console.warn("Using offline user context:", err);
+    }
+  }, [authFetch, isAuthenticated]);
+
+  // Initial load
+  useEffect(() => {
+    if (isAuthenticated) {
+      refreshUserData();
+    }
+  }, [isAuthenticated, refreshUserData]);
+
+  // Fetch daily news
+  useEffect(() => {
+    authFetch("/api/news")
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setNewsArticles(data);
+        }
+      })
+      .catch(() => {});
+  }, [authFetch]);
+
+  // Log in user
+  const loginUser = async (userData, authToken) => {
+    const validToken = authToken || `jwt_${userData.id || Date.now()}`;
+    setToken(validToken);
+    setUser(userData);
+    setIsAuthenticated(true);
+
+    try {
+      localStorage.setItem("ecocalm_user", JSON.stringify(userData));
+      localStorage.setItem("ecocalm_token", validToken);
+    } catch (e) {}
+
+    // Clear previous user's temporary checks
+    setVibeBefore(null);
+    setVibeAfter(null);
+
+    // Fetch this specific user's plant and mood logs
+    try {
+      const [pRes, mRes] = await Promise.all([
+        fetch("/api/plant", {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${validToken}`,
+            "x-user-id": userData.id
+          }
+        }).catch(() => null),
+        fetch("/api/mood", {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${validToken}`,
+            "x-user-id": userData.id
+          }
+        }).catch(() => null)
+      ]);
+
+      if (pRes && pRes.ok) {
+        const plantData = await pRes.json();
+        setPlant(plantData);
+      } else {
+        setPlant({
+          name: "My Gentle Companion",
+          variety: "Monstera Deliciosa",
+          plantType: "monstera",
+          stage: 1,
+          stageTitle: "Tender Seedling",
+          hydration: 50,
+          dropsNeededForNextBloom: 30,
+          totalDropsPoured: 20,
+          targetDropsNextStage: 50,
+          potStyle: "ceramic_ribbed",
+          flowerType: "rose_bud",
+          companion: "butterfly",
+          companionName: "Blue Morpho",
+          hasSelectedSeed: false,
+          lastWatered: "Just planted"
+        });
+      }
+
+      if (mRes && mRes.ok) {
+        const logs = await mRes.json();
+        setMoodLogs(logs);
+        const latestBefore = logs.find((l) => l.checkinType === "before");
+        const latestAfter = logs.find((l) => l.checkinType === "after");
+        if (latestBefore) setVibeBefore(latestBefore);
+        if (latestAfter) setVibeAfter(latestAfter);
+      } else {
+        setMoodLogs([]);
+      }
+    } catch (e) {
+      setMoodLogs([]);
+    }
+
+    // Default first screen after login: PLANT (Section 1)
+    setActiveTab("plant");
+    setIsAuthModalOpen(false);
+    triggerCelebration();
+
+    const displayName = (userData.name || "Mindful Soul").split(" ")[0];
+    showToast(
+      userData.role === "admin"
+        ? `Welcome Admin, ${displayName}! 🛡️`
+        : `Welcome back, ${displayName}! 🌸`,
+      "local_florist"
+    );
+  };
+
+  // Log out user
+  const logoutUser = () => {
+    try {
+      localStorage.removeItem("ecocalm_user");
+      localStorage.removeItem("ecocalm_token");
+    } catch (e) {}
+
+    setToken(null);
+    setIsAuthenticated(false);
+    setUser({
+      name: "Guest",
+      tagline: "Exploring Sanctuary",
+      avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=ecocalm_guest",
+      waterDrops: 0
+    });
+    setPlant({
+      name: "My Gentle Companion",
+      variety: "Monstera Deliciosa",
+      plantType: "monstera",
+      stage: 1,
+      stageTitle: "Tender Seedling",
+      hydration: 50,
+      dropsNeededForNextBloom: 30,
+      totalDropsPoured: 20,
+      targetDropsNextStage: 50,
+      potStyle: "ceramic_ribbed",
+      flowerType: "rose_bud",
+      companion: "butterfly",
+      companionName: "Blue Morpho",
+      hasSelectedSeed: false,
+      lastWatered: "Just now"
+    });
+    setMoodLogs([]);
+    setVibeBefore(null);
+    setVibeAfter(null);
+    setActiveTab("landing");
+    showToast("Logged out peacefully. See you soon 🌙", "logout");
+  };
+
+  // Update user avatar
+  const updateUserAvatar = async (newAvatarUrl) => {
+    const updatedUser = { ...user, avatar: newAvatarUrl };
+    setUser(updatedUser);
+    try {
+      localStorage.setItem("ecocalm_user", JSON.stringify(updatedUser));
+      await authFetch("/api/user", {
+        method: "PUT",
+        body: JSON.stringify({ avatar: newAvatarUrl })
+      });
+    } catch (e) {}
+    triggerCelebration();
+    showToast("Profile picture updated! 🌸", "account_circle");
+  };
 
   // Water Plant
   const waterPlant = async (drops = 10) => {
     try {
-      const res = await fetch("/api/plant/water", {
+      const res = await authFetch("/api/plant/water", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ drops })
       });
       if (res.ok) {
@@ -195,16 +336,16 @@ export const EcoCalmProvider = ({ children }) => {
         setPlant(data.plant);
         setUser(data.user);
         triggerCelebration();
-        showToast(`Hydrated! Sir Photosynth-is gained +${drops} water drops 💧`, "water_drop");
+        showToast(`Hydrated! ${data.plant.name} gained +${drops} water drops 💧`, "water_drop");
       }
     } catch (err) {
-      setPlant(prev => ({
+      setPlant((prev) => ({
         ...prev,
-        hydration: Math.min(100, prev.hydration + 15),
-        totalDropsPoured: prev.totalDropsPoured + drops,
+        hydration: Math.min(100, (prev.hydration || 50) + 15),
+        totalDropsPoured: (prev.totalDropsPoured || 0) + drops,
         lastWatered: "Just now"
       }));
-      setUser(prev => ({ ...prev, waterDrops: Math.max(0, prev.waterDrops - drops) }));
+      setUser((prev) => ({ ...prev, waterDrops: Math.max(0, (prev.waterDrops || 0) - drops) }));
       triggerCelebration();
       showToast("Hydrated plant with pure intention 🌱", "water_drop");
     }
@@ -213,28 +354,26 @@ export const EcoCalmProvider = ({ children }) => {
   // Customize Plant
   const customizePlant = async (updates) => {
     try {
-      const res = await fetch("/api/plant/customize", {
+      const res = await authFetch("/api/plant/customize", {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updates)
       });
       if (res.ok) {
         const updated = await res.json();
         setPlant(updated);
-        showToast("Sanctuary conservatory updated ✨", "palette");
+        showToast("Plant preferences saved! ✨", "palette");
       }
     } catch (err) {
-      setPlant(prev => ({ ...prev, ...updates }));
-      showToast("Sanctuary conservatory updated ✨", "palette");
+      setPlant((prev) => ({ ...prev, ...updates }));
+      showToast("Plant preferences saved! ✨", "palette");
     }
   };
 
-  // Adopt Plant
+  // Adopt / Select Plant Seed (Section 2)
   const adoptPlant = async (adoptionData) => {
     try {
-      const res = await fetch("/api/plant/adopt", {
+      const res = await authFetch("/api/plant/adopt", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(adoptionData)
       });
       if (res.ok) {
@@ -242,193 +381,105 @@ export const EcoCalmProvider = ({ children }) => {
         setPlant(data.plant);
         setUser(data.user);
         triggerCelebration();
-        showToast(`Welcome! ${data.plant.name} adopted with +25 drops 🌸`, "potted_plant");
-        setActiveTab("home");
+        showToast(`Welcome! ${data.plant.name} planted with +25 drops 🌸`, "potted_plant");
       }
     } catch (err) {
-      setPlant(prev => ({ ...prev, ...adoptionData }));
-      setActiveTab("home");
+      setPlant((prev) => ({ ...prev, ...adoptionData, hasSelectedSeed: true }));
+      setUser((prev) => ({ ...prev, waterDrops: (prev.waterDrops || 0) + 25 }));
+      showToast("Seed planted with care! 🌱", "potted_plant");
     }
   };
 
-  // Complete Quest
-  const completeQuest = async (questId) => {
-    try {
-      const res = await fetch("/api/quests/complete", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ questId })
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setQuests(prev => prev.map(q => q.id === questId ? { ...q, completed: true } : q));
-        if (data.user) setUser(data.user);
-        triggerCelebration();
-        showToast(`Quest completed! Earned +${data.dropsEarned} water drops 💧`, "emoji_events");
-      }
-    } catch (err) {
-      setQuests(prev => prev.map(q => q.id === questId ? { ...q, completed: true } : q));
-      setUser(prev => ({ ...prev, waterDrops: prev.waterDrops + 20 }));
-      triggerCelebration();
-      showToast("Quest completed! +20 drops earned 🌱", "emoji_events");
-    }
-  };
-
-  // Submit Custom Quest
-  const submitQuest = async (questData) => {
-    try {
-      const res = await fetch("/api/quests/submit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(questData)
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setQuests(prev => [data.quest, ...prev]);
-        if (data.user) setUser(data.user);
-        triggerCelebration();
-        showToast("Quest submitted to community! +20 drops awarded 🌿", "add_task");
-      }
-    } catch (err) {
-      showToast("Thank you for sharing your offline idea! ✨");
-    }
-  };
-
-  // Like or Bookmark Story
-  const toggleStoryBookmark = async (storyId) => {
-    try {
-      const res = await fetch("/api/stories/like", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ storyId })
-      });
-      if (res.ok) {
-        const updated = await res.json();
-        setStories(prev => prev.map(s => s.id === storyId ? updated : s));
-        showToast("Story saved to mindful reading journal 📖", "bookmark");
-      }
-    } catch (err) {
-      setStories(prev => prev.map(s => s.id === storyId ? { ...s, bookmarked: !s.bookmarked, likes: s.likes + 1 } : s));
-    }
-  };
-
-  // Submit Good News Story
-  const submitStory = async (storyData) => {
-    try {
-      const res = await fetch("/api/stories/submit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(storyData)
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setStories(prev => [data.story, ...prev]);
-        if (data.user) setUser(data.user);
-        triggerCelebration();
-        showToast("Shared something good! +25 drops added to reservoir 💌", "favorite");
-      }
-    } catch (err) {
-      showToast("Thank you for spreading gentle hope! 🌊");
-    }
-  };
-
-  // Create Community Post
-  const createPost = async (postData) => {
-    try {
-      const res = await fetch("/api/community/post", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(postData)
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setPosts(prev => [data.post, ...prev]);
-        if (data.user) setUser(data.user);
-        triggerCelebration();
-        showToast("Project post shared with Hobbyverse! +15 drops 🧶", "filter_vintage");
-      }
-    } catch (err) {
-      showToast("Project post shared with Hobbyverse! 🌿");
-    }
-  };
-
-  // Give Drops to Post
-  const giveDropToPost = async (postId) => {
-    try {
-      const res = await fetch("/api/community/drops", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ postId })
-      });
-      if (res.ok) {
-        const updated = await res.json();
-        setPosts(prev => prev.map(p => p.id === postId ? updated : p));
-        showToast("Sent encouragement drop to creator 💧", "water_drop");
-      }
-    } catch (err) {
-      setPosts(prev => prev.map(p => p.id === postId ? { ...p, dropsGiven: p.dropsGiven + 1, hasGivenDrop: true } : p));
-    }
-  };
-
-  // Add Comment to Post
-  const addCommentToPost = async (postId, text) => {
-    try {
-      const res = await fetch("/api/community/comment", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ postId, text })
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setPosts(prev => prev.map(p => p.id === postId ? data.post : p));
-        showToast("Gentle comment posted 💬", "chat_bubble");
-      }
-    } catch (err) {
-      showToast("Comment added! 🌿");
-    }
-  };
-
-  // Log Vibe Check
+  // Log Vibe Check (Supports "before" and "after")
   const logMood = async (moodData) => {
     try {
-      const res = await fetch("/api/mood", {
+      const res = await authFetch("/api/mood", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(moodData)
       });
       if (res.ok) {
         const data = await res.json();
-        setMoodLogs(prev => [data.mood, ...prev]);
+        setMoodLogs((prev) => [data.mood, ...prev]);
         if (data.user) setUser(data.user);
-        showToast("Vibe check logged! +10 drops recorded 🕊️", "favorite");
+
+        if (moodData.checkinType === "before") {
+          setVibeBefore(data.mood);
+        } else if (moodData.checkinType === "after") {
+          setVibeAfter(data.mood);
+        }
+
+        triggerCelebration();
+        showToast(
+          moodData.checkinType === "before"
+            ? "Baseline mood recorded! Ready for mindful activities 🌱"
+            : "Post-activity check-in saved! +10 Drops awarded 🕊️",
+          "favorite"
+        );
       }
     } catch (err) {
-      showToast("Vibe check logged! 🕊️");
+      const fallbackLog = {
+        id: `m_${Date.now()}`,
+        score: moodData.score,
+        emotion: moodData.emotion,
+        emotionsList: moodData.emotionsList || [moodData.emotion],
+        intensity: moodData.intensity || 5,
+        note: moodData.note || "",
+        checkinType: moodData.checkinType || "general",
+        timestamp: new Date().toISOString()
+      };
+      setMoodLogs((prev) => [fallbackLog, ...prev]);
+      if (moodData.checkinType === "before") setVibeBefore(fallbackLog);
+      if (moodData.checkinType === "after") setVibeAfter(fallbackLog);
+      setUser((prev) => ({ ...prev, waterDrops: (prev.waterDrops || 0) + 10 }));
+      showToast("Vibe check logged! 🕊️", "favorite");
     }
   };
 
-  // Complete Breathing Session
+  // Complete Breathing Exercise
   const completeBreathing = async (minutes = 3, pattern = "box") => {
     try {
-      const res = await fetch("/api/breathe/complete", {
+      const res = await authFetch("/api/breathe/complete", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ minutes, pattern })
       });
       if (res.ok) {
         const data = await res.json();
         if (data.user) setUser(data.user);
         triggerCelebration();
-        showToast("Breathing session completed! +20 drops added to your garden 🌱", "spa");
+        showToast("Breathing session completed! +20 drops added to your plant 🌱", "spa");
       }
     } catch (err) {
-      setUser(prev => ({
+      setUser((prev) => ({
         ...prev,
-        waterDrops: prev.waterDrops + 20,
-        offlineMinutesToday: prev.offlineMinutesToday + minutes
+        waterDrops: (prev.waterDrops || 0) + 20,
+        offlineMinutesToday: (prev.offlineMinutesToday || 0) + minutes
       }));
       triggerCelebration();
       showToast("Breathing session completed! +20 drops 🌱", "spa");
+    }
+  };
+
+  // Complete Hobby Activity (Section 6)
+  const completeHobbyActivity = async (hobbyType, activityTitle) => {
+    try {
+      const res = await authFetch("/api/hobbies/complete", {
+        method: "POST",
+        body: JSON.stringify({ hobbyType, activityTitle })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.user) setUser(data.user);
+        triggerCelebration();
+        showToast(data.message || "Hobby activity completed! +15 Drops 🎨", "palette");
+      }
+    } catch (err) {
+      setUser((prev) => ({
+        ...prev,
+        waterDrops: (prev.waterDrops || 0) + 15,
+        offlineMinutesToday: (prev.offlineMinutesToday || 0) + 10
+      }));
+      triggerCelebration();
+      showToast("Hobby activity completed! +15 Drops 🎨", "palette");
     }
   };
 
@@ -442,7 +493,7 @@ export const EcoCalmProvider = ({ children }) => {
       soundscape.play(track);
       setCurrentSound(track);
       setIsAudioPlaying(true);
-      const labels = { rain: "Rain Falling on the Roof", breeze: "Forest Air", vinyl: "Warm Lo-Fi" };
+      const labels = { rain: "Rain on Leaves", breeze: "Forest Air", vinyl: "Warm Lo-Fi Chords" };
       showToast(`Playing ${labels[track] || track} 🌿`, "volume_up");
     }
   };
@@ -479,24 +530,18 @@ export const EcoCalmProvider = ({ children }) => {
         setUser,
         plant,
         setPlant,
-        quests,
-        stories,
-        posts,
         moodLogs,
+        vibeBefore,
+        vibeAfter,
+        newsArticles,
         isDoomscrollOpen,
         setIsDoomscrollOpen,
         waterPlant,
         customizePlant,
         adoptPlant,
-        completeQuest,
-        submitQuest,
-        toggleStoryBookmark,
-        submitStory,
-        createPost,
-        giveDropToPost,
-        addCommentToPost,
         logMood,
         completeBreathing,
+        completeHobbyActivity,
         isAudioPlaying,
         currentSound,
         toggleSoundscape,

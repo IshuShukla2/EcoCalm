@@ -69,18 +69,20 @@ export const AuthModal = ({ isOpen, onClose, initialMode = "login" }) => {
         };
         loginUser(fallbackAdmin, "jwt_hemal_admin_token_offline");
       } else {
+        const derivedName = cleanEmail ? cleanEmail.split("@")[0].replace(/[._]/g, " ") : "Mindful Soul";
+        const formattedName = derivedName.charAt(0).toUpperCase() + derivedName.slice(1);
         const fallbackUser = {
           id: `user_${Date.now()}`,
-          name: name.trim() || (isSignup ? "Mindful Soul" : "Maya Chen"),
+          name: name.trim() || formattedName,
           role: "user",
-          tagline: "Gentle Pacer",
-          email: cleanEmail || "maya@ecocalm.app",
-          waterDrops: 142,
-          offlineMinutesToday: 45,
-          questsCompletedToday: 2,
-          calmStreakDays: 6,
+          tagline: "Mindful Gardener",
+          email: cleanEmail || `guest_${Date.now()}@ecocalm.app`,
+          waterDrops: 50,
+          offlineMinutesToday: 0,
+          questsCompletedToday: 0,
+          calmStreakDays: 1,
           dailyAffirmation: "Your soft life starts here.",
-          avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuD2whyhBjn4A9SnEMzocCRmpZP4ZEqmpJ-zWeW23kmuur800au6BqfdYcmvuwTzO79WzC_neRaecdYdFzxrWI45DuCG6rwzNFEUzVaqidljRlDiMlGT_MSXJq5Bqg6DCHCsacno2GMG-rbsJe5Cv7KQB01D4qvRh7qT9Dvw6fh49e89ImV44CfxDLOv6nk-_mdQir7iuP4e_KzmsrZPEM-PNjQETIJFP7OenqynM0Hg6_y8eiUn2A1B_w"
+          avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(cleanEmail || "mindful")}`
         };
         loginUser(fallbackUser, "jwt_user_token_offline");
       }
@@ -174,22 +176,20 @@ export const AuthModal = ({ isOpen, onClose, initialMode = "login" }) => {
           <button
             type="button"
             onClick={() => { setMode("login"); setError(""); }}
-            className={`py-2 rounded-xl transition-all text-center ${
-              mode === "login"
+            className={`py-2 rounded-xl transition-all text-center ${mode === "login"
                 ? "bg-surface-container-lowest text-primary shadow-xs font-bold"
                 : "text-on-surface-variant hover:text-on-surface"
-            }`}
+              }`}
           >
             Log In
           </button>
           <button
             type="button"
             onClick={() => { setMode("signup"); setError(""); }}
-            className={`py-2 rounded-xl transition-all text-center ${
-              mode === "signup"
+            className={`py-2 rounded-xl transition-all text-center ${mode === "signup"
                 ? "bg-surface-container-lowest text-primary shadow-xs font-bold"
                 : "text-on-surface-variant hover:text-on-surface"
-            }`}
+              }`}
           >
             Sign Up 🌱
           </button>
@@ -278,7 +278,7 @@ export const AuthModal = ({ isOpen, onClose, initialMode = "login" }) => {
             className="w-full py-2.5 rounded-full bg-secondary-container hover:bg-secondary-fixed text-on-secondary-container font-semibold text-xs transition-colors flex items-center justify-center gap-2 border border-secondary/30 shadow-xs active:scale-95"
           >
             <span className="material-symbols-outlined text-sm">spa</span>
-            <span>Continue as Visitor Demo (Maya Chen)</span>
+            <span>Explore as Quick Visitor Demo</span>
           </button>
 
           <p className="text-[11px] text-center text-on-surface-variant pt-1">

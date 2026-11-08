@@ -6,38 +6,25 @@ export const Sidebar = () => {
     activeTab,
     setActiveTab,
     user,
+    plant,
     isAdmin,
     mobileMenuOpen,
     setMobileMenuOpen,
-    setIsDoomscrollOpen,
     logoutUser,
     openAvatarModal,
     openHelpline,
     openFeedback
   } = useEcoCalm();
 
-  const baseNavItems = [
-    { id: "home", label: "Home Dashboard", icon: "home" },
-    { id: "vibe", label: "Vibe Check", icon: "favorite" },
+  // The EXACT 6 required main navigation items in precise order
+  const mainNavItems = [
+    { id: "plant", label: "Plant", icon: "potted_plant" },
+    { id: "vibe_before", label: "Vibe Check (Before)", icon: "favorite_border" },
     { id: "breathe", label: "Breathe", icon: "air" },
-    { id: "hobbies", label: "Explore Hobbies", icon: "explore" },
-    { id: "plottwist", label: "Plot Twist Feed", icon: "wb_sunny" },
-    { id: "hobbyverse", label: "Hobbyverse", icon: "group" },
-    { id: "garden", label: "My Garden", icon: "potted_plant" },
-    { id: "profile", label: "Profile & Journey", icon: "person" }
+    { id: "news", label: "Daily News", icon: "newspaper" },
+    { id: "hobbies", label: "Hobbies", icon: "palette" },
+    { id: "vibe_after", label: "Vibe Check (After)", icon: "ecg_heart" }
   ];
-
-  // If user is Admin, add Admin Feedback Dashboard item at top or high priority
-  const navItems = isAdmin
-    ? [
-        { id: "admin", label: "Admin & Feedback", icon: "shield", badge: "Admin" },
-        ...baseNavItems,
-        { id: "landing", label: "Overview & Adoption", icon: "spa" }
-      ]
-    : [
-        ...baseNavItems,
-        { id: "landing", label: "Overview & Adoption", icon: "spa" }
-      ];
 
   const handleNavClick = (id) => {
     setActiveTab(id);
@@ -49,10 +36,10 @@ export const Sidebar = () => {
     <>
       {/* ================= DESKTOP SIDEBAR ================= */}
       <aside className="hidden lg:flex fixed left-0 top-0 h-full w-72 bg-surface-container-low shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-50 flex-col justify-between p-space-md border-r border-outline-variant/30">
-        <div className="flex flex-col gap-space-sm overflow-y-auto">
+        <div className="flex flex-col gap-space-sm overflow-y-auto pr-1">
           {/* Brand Logo & Tagline */}
           <button
-            onClick={() => handleNavClick("home")}
+            onClick={() => handleNavClick("plant")}
             className="flex items-center gap-space-sm px-space-sm py-space-xs text-left group"
           >
             <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary group-hover:scale-105 transition-transform">
@@ -84,7 +71,7 @@ export const Sidebar = () => {
                 water_drop
               </span>
               <span className="font-sans text-xs text-tertiary font-bold tracking-tight">
-                {user.waterDrops || 142} drops
+                {user?.waterDrops || 0} drops
               </span>
             </div>
             <span className="font-sans text-[10px] text-on-tertiary-fixed-variant bg-surface-container-lowest px-2 py-0.5 rounded-full font-semibold">
@@ -92,12 +79,41 @@ export const Sidebar = () => {
             </span>
           </div>
 
+          {/* Selected Plant Mini Widget */}
+          <div
+            onClick={() => handleNavClick("plant")}
+            className="mx-space-xs p-3 rounded-2xl bg-surface-container border border-outline-variant/30 cursor-pointer hover:border-primary/40 hover:bg-surface-container-high transition-all group"
+            title="View your plant companion"
+          >
+            <div className="flex items-center justify-between mb-1.5">
+              <div className="flex items-center gap-2">
+                <span className="text-base">🪴</span>
+                <span className="font-serif text-xs font-bold text-on-surface truncate max-w-[120px]">
+                  {plant?.name || "My Plant"}
+                </span>
+              </div>
+              <span className="text-[10px] font-semibold text-primary bg-primary-fixed/40 px-2 py-0.5 rounded-full">
+                Stage {plant?.stage || 1}/5
+              </span>
+            </div>
+            <div className="w-full bg-surface-container-highest h-1.5 rounded-full overflow-hidden">
+              <div
+                className="bg-primary h-full rounded-full transition-all duration-500"
+                style={{ width: `${Math.min(100, plant?.hydration || 50)}%` }}
+              />
+            </div>
+            <div className="flex items-center justify-between mt-1 text-[10px] text-on-surface-variant font-medium">
+              <span>{plant?.stageTitle || "Tender Seedling"}</span>
+              <span className="text-primary font-bold">{plant?.hydration || 50}%</span>
+            </div>
+          </div>
+
           {/* Quick Wellbeing Action Buttons (Helpline & Feedback) */}
-          <div className="mx-space-xs grid grid-cols-2 gap-2 mt-1">
+          <div className="mx-space-xs grid grid-cols-2 gap-2 mt-0.5">
             <button
               onClick={openHelpline}
               className="flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-xl bg-[#eaf3eb] hover:bg-[#d8ebd9] text-[#2d552a] border border-[#cbe1ce] text-xs font-bold transition-all shadow-2xs active:scale-95"
-              title="Open 24/7 Mental Health Helpline Popup"
+              title="Open 24/7 Mental Health Helpline Support"
             >
               <span className="material-symbols-outlined text-sm">call</span>
               <span>Helpline</span>
@@ -112,9 +128,9 @@ export const Sidebar = () => {
             </button>
           </div>
 
-          {/* Navigation Links */}
-          <nav className="flex flex-col gap-1 mt-space-xs">
-            {navItems.map((item) => {
+          {/* The Six Main Navigation Links */}
+          <nav className="flex flex-col gap-1 mt-2">
+            {mainNavItems.map((item, index) => {
               const isActive = activeTab === item.id;
               return (
                 <button
@@ -129,61 +145,74 @@ export const Sidebar = () => {
                   <div className="flex items-center gap-space-sm">
                     <span
                       className={`material-symbols-outlined text-[20px] transition-transform ${
-                        isActive ? "scale-110" : ""
+                        isActive ? "scale-110 text-primary font-bold" : ""
                       }`}
+                      style={isActive ? { fontVariationSettings: "'FILL' 1" } : {}}
                     >
                       {item.icon}
                     </span>
                     <span>{item.label}</span>
                   </div>
-                  {item.badge && (
-                    <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-[#3b6637] text-white font-bold">
-                      {item.badge}
-                    </span>
-                  )}
+                  <span className="text-[10px] text-on-surface-variant/70 font-mono">
+                    0{index + 1}
+                  </span>
                 </button>
               );
             })}
           </nav>
+
+          {/* Optional Admin Panel trigger if user is Admin */}
+          {isAdmin && (
+            <div className="mt-2 pt-2 border-t border-outline-variant/20 mx-space-xs">
+              <button
+                onClick={() => handleNavClick("admin")}
+                className={`w-full flex items-center justify-between px-space-md py-2 rounded-xl text-xs font-semibold transition-all ${
+                  activeTab === "admin"
+                    ? "bg-[#3b6637] text-white"
+                    : "bg-surface-container text-[#3b6637] hover:bg-surface-container-high border border-[#3b6637]/30"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-base">shield</span>
+                  <span>Admin Feedback Center</span>
+                </div>
+                <span className="text-[10px] bg-white/20 px-1.5 py-0.2 rounded font-bold">Admin</span>
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Bottom Profile Card */}
-        <div className="flex flex-col gap-space-sm pt-space-md border-t border-outline-variant/30">
-          <div
-            onClick={() => handleNavClick(isAdmin ? "admin" : "profile")}
-            className="p-space-sm rounded-xl bg-surface-container flex items-center justify-between cursor-pointer hover:bg-surface-container-high transition-colors"
-          >
-            <div className="flex items-center gap-space-sm">
+        <div className="flex flex-col gap-space-sm pt-space-sm border-t border-outline-variant/30">
+          <div className="p-space-sm rounded-xl bg-surface-container flex items-center justify-between hover:bg-surface-container-high transition-colors">
+            <div
+              className="flex items-center gap-space-sm cursor-pointer flex-1 min-w-0"
+              onClick={() => handleNavClick("plant")}
+            >
               <img
-                alt={user.name}
-                className="w-9 h-9 rounded-full object-cover ring-2 ring-primary/20"
-                src={user.avatar}
+                alt={user?.name || "User"}
+                className="w-9 h-9 rounded-full object-cover ring-2 ring-primary/20 shrink-0"
+                src={user?.avatar || "https://api.dicebear.com/7.x/bottts/svg?seed=ecocalm"}
               />
-              <div className="flex flex-col">
-                <span className="font-sans text-sm text-on-surface font-semibold leading-tight">
-                  {user.name}
+              <div className="flex flex-col min-w-0">
+                <span className="font-sans text-sm text-on-surface font-semibold leading-tight truncate">
+                  {user?.name || "Mindful Soul"}
                 </span>
-                <span className="font-sans text-xs text-on-surface-variant">
-                  {isAdmin ? "Sanctuary Admin" : user.tagline}
+                <span className="font-sans text-xs text-on-surface-variant truncate">
+                  {isAdmin ? "Sanctuary Admin" : user?.tagline || "Mindful Gardener"}
                 </span>
               </div>
             </div>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1 shrink-0">
               <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  openAvatarModal();
-                }}
+                onClick={openAvatarModal}
                 title="Change Profile Picture"
                 className="p-1.5 text-on-surface-variant hover:text-primary hover:bg-surface-container-highest rounded-lg transition-colors"
               >
                 <span className="material-symbols-outlined text-[18px]">photo_camera</span>
               </button>
               <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  logoutUser();
-                }}
+                onClick={logoutUser}
                 title="Log Out of Sanctuary"
                 className="p-1.5 text-on-surface-variant hover:text-error hover:bg-error-container/30 rounded-lg transition-colors flex items-center justify-center"
               >
@@ -225,10 +254,10 @@ export const Sidebar = () => {
               <div className="px-space-md py-2 rounded-full bg-tertiary-fixed/60 flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
                   <span className="material-symbols-outlined text-tertiary text-base">water_drop</span>
-                  <span className="text-xs text-tertiary font-bold">{user.waterDrops} drops</span>
+                  <span className="text-xs text-tertiary font-bold">{user?.waterDrops || 0} drops</span>
                 </div>
                 <span className="text-[10px] bg-surface-container-lowest px-2 py-0.5 rounded-full">
-                  {isAdmin ? "Admin Active" : "Growing 🌱"}
+                  {plant?.name || "Plant"} 🌱
                 </span>
               </div>
 
@@ -256,9 +285,9 @@ export const Sidebar = () => {
                 </button>
               </div>
 
-              {/* Links */}
+              {/* Six Main Navigation Links */}
               <nav className="flex flex-col gap-1">
-                {navItems.map((item) => {
+                {mainNavItems.map((item, index) => {
                   const isActive = activeTab === item.id;
                   return (
                     <button
@@ -274,24 +303,43 @@ export const Sidebar = () => {
                         <span className="material-symbols-outlined text-lg">{item.icon}</span>
                         <span>{item.label}</span>
                       </div>
-                      {item.badge && (
-                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#3b6637] text-white font-bold">
-                          {item.badge}
-                        </span>
-                      )}
+                      <span className="text-[10px] text-on-surface-variant/70 font-mono">
+                        0{index + 1}
+                      </span>
                     </button>
                   );
                 })}
               </nav>
+
+              {isAdmin && (
+                <button
+                  onClick={() => handleNavClick("admin")}
+                  className={`flex items-center justify-between px-space-md py-2 rounded-xl text-xs font-semibold transition-all ${
+                    activeTab === "admin"
+                      ? "bg-[#3b6637] text-white"
+                      : "bg-surface-container text-[#3b6637] border border-[#3b6637]/30"
+                  }`}
+                >
+                  <span className="flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-base">shield</span>
+                    <span>Admin Feedback</span>
+                  </span>
+                  <span className="text-[10px] bg-white/20 px-1 rounded">Admin</span>
+                </button>
+              )}
             </div>
 
             {/* Profile */}
             <div className="pt-space-md border-t border-outline-variant/30 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <img alt={user.name} className="w-8 h-8 rounded-full object-cover" src={user.avatar} />
+                <img
+                  alt={user?.name || "User"}
+                  className="w-8 h-8 rounded-full object-cover"
+                  src={user?.avatar || "https://api.dicebear.com/7.x/bottts/svg?seed=ecocalm"}
+                />
                 <div className="flex flex-col text-xs">
-                  <span className="font-semibold text-on-surface">{user.name}</span>
-                  <span className="text-on-surface-variant">{isAdmin ? "Admin" : user.tagline}</span>
+                  <span className="font-semibold text-on-surface">{user?.name || "User"}</span>
+                  <span className="text-on-surface-variant">{isAdmin ? "Admin" : user?.tagline}</span>
                 </div>
               </div>
               <div className="flex items-center gap-1">
@@ -314,63 +362,63 @@ export const Sidebar = () => {
       {/* ================= MOBILE BOTTOM NAVIGATION DOCK ================= */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 h-16 bg-surface/95 backdrop-blur-xl border-t border-outline-variant/40 z-40 px-2 flex items-center justify-around shadow-[0_-2px_12px_rgba(0,0,0,0.04)]">
         <button
-          onClick={() => handleNavClick("home")}
+          onClick={() => handleNavClick("plant")}
           className={`flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg transition-colors ${
-            activeTab === "home" ? "text-primary font-bold" : "text-on-surface-variant"
-          }`}
-        >
-          <span className="material-symbols-outlined text-xl">home</span>
-          <span className="text-[10px]">Home</span>
-        </button>
-
-        {isAdmin ? (
-          <button
-            onClick={() => handleNavClick("admin")}
-            className={`flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg transition-colors ${
-              activeTab === "admin" ? "text-[#3b6637] font-bold" : "text-on-surface-variant"
-            }`}
-          >
-            <span className="material-symbols-outlined text-xl">shield</span>
-            <span className="text-[10px]">Admin</span>
-          </button>
-        ) : (
-          <button
-            onClick={() => handleNavClick("breathe")}
-            className={`flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg transition-colors ${
-              activeTab === "breathe" ? "text-primary font-bold" : "text-on-surface-variant"
-            }`}
-          >
-            <span className="material-symbols-outlined text-xl">air</span>
-            <span className="text-[10px]">Breathe</span>
-          </button>
-        )}
-
-        {/* Center Helpline Support Trigger */}
-        <button
-          onClick={openHelpline}
-          className="flex flex-col items-center justify-center w-12 h-12 -mt-5 rounded-full bg-[#3b6637] text-white shadow-[0_4px_16px_rgba(59,102,55,0.4)] active:scale-90 transition-transform"
-          title="Tele-MANAS Helpline"
-        >
-          <span className="material-symbols-outlined text-xl leading-none">call</span>
-          <span className="text-[8px] font-bold mt-0.5">Help</span>
-        </button>
-
-        <button
-          onClick={openFeedback}
-          className="flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg transition-colors text-on-surface-variant hover:text-primary"
-        >
-          <span className="material-symbols-outlined text-xl">rate_review</span>
-          <span className="text-[10px]">Feedback</span>
-        </button>
-
-        <button
-          onClick={() => handleNavClick("garden")}
-          className={`flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg transition-colors ${
-            activeTab === "garden" ? "text-primary font-bold" : "text-on-surface-variant"
+            activeTab === "plant" ? "text-primary font-bold" : "text-on-surface-variant"
           }`}
         >
           <span className="material-symbols-outlined text-xl">potted_plant</span>
-          <span className="text-[10px]">Garden</span>
+          <span className="text-[10px]">Plant</span>
+        </button>
+
+        <button
+          onClick={() => handleNavClick("vibe_before")}
+          className={`flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg transition-colors ${
+            activeTab === "vibe_before" ? "text-primary font-bold" : "text-on-surface-variant"
+          }`}
+        >
+          <span className="material-symbols-outlined text-xl">favorite_border</span>
+          <span className="text-[10px]">Vibe (Pre)</span>
+        </button>
+
+        {/* Center Breathe / Core Exercise Button */}
+        <button
+          onClick={() => handleNavClick("breathe")}
+          className="flex flex-col items-center justify-center w-12 h-12 -mt-5 rounded-full bg-primary text-on-primary shadow-[0_4px_16px_rgba(59,102,55,0.4)] active:scale-90 transition-transform"
+          title="Breathe"
+        >
+          <span className="material-symbols-outlined text-xl leading-none">air</span>
+          <span className="text-[8px] font-bold mt-0.5">Breathe</span>
+        </button>
+
+        <button
+          onClick={() => handleNavClick("news")}
+          className={`flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg transition-colors ${
+            activeTab === "news" ? "text-primary font-bold" : "text-on-surface-variant"
+          }`}
+        >
+          <span className="material-symbols-outlined text-xl">newspaper</span>
+          <span className="text-[10px]">News</span>
+        </button>
+
+        <button
+          onClick={() => handleNavClick("hobbies")}
+          className={`flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg transition-colors ${
+            activeTab === "hobbies" ? "text-primary font-bold" : "text-on-surface-variant"
+          }`}
+        >
+          <span className="material-symbols-outlined text-xl">palette</span>
+          <span className="text-[10px]">Hobbies</span>
+        </button>
+
+        <button
+          onClick={() => handleNavClick("vibe_after")}
+          className={`flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg transition-colors ${
+            activeTab === "vibe_after" ? "text-primary font-bold" : "text-on-surface-variant"
+          }`}
+        >
+          <span className="material-symbols-outlined text-xl">ecg_heart</span>
+          <span className="text-[10px]">Vibe (Post)</span>
         </button>
       </nav>
     </>

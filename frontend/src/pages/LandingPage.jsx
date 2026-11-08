@@ -124,7 +124,7 @@ export const LandingPage = () => {
                 onClick={() => openAuthModal("login")}
                 className="inline-flex items-center justify-center gap-1.5 px-4 py-3.5 rounded-full bg-secondary-container/40 text-on-secondary-container text-xs font-bold hover:bg-secondary-container transition-all"
               >
-                <span>Demo (Maya Chen)</span>
+                <span>Quick Demo Visitor</span>
                 <span className="material-symbols-outlined text-sm">arrow_forward</span>
               </button>
             </div>
@@ -298,11 +298,10 @@ export const LandingPage = () => {
                   <div
                     key={seedling.id}
                     onClick={() => setSelectedPlant(seedling)}
-                    className={`cursor-pointer p-5 rounded-2xl shadow-xs transition-all duration-200 flex flex-col justify-between ${
-                      isSelected
+                    className={`cursor-pointer p-5 rounded-2xl shadow-xs transition-all duration-200 flex flex-col justify-between ${isSelected
                         ? "bg-surface-container-lowest ring-2 ring-primary shadow-md scale-[1.02]"
                         : "bg-surface-container-lowest/80 hover:bg-surface-container-lowest hover:shadow-xs"
-                    }`}
+                      }`}
                   >
                     <div>
                       <div className="w-full h-32 rounded-xl overflow-hidden mb-4 bg-surface-container-high">
@@ -311,9 +310,8 @@ export const LandingPage = () => {
                       <div className="flex items-center justify-between mb-1">
                         <span className="font-sans text-sm font-bold text-on-surface">{seedling.name}</span>
                         <span
-                          className={`material-symbols-outlined text-base ${
-                            isSelected ? "text-primary" : "text-outline-variant"
-                          }`}
+                          className={`material-symbols-outlined text-base ${isSelected ? "text-primary" : "text-outline-variant"
+                            }`}
                           style={isSelected ? { fontVariationSettings: "'FILL' 1" } : {}}
                         >
                           {isSelected ? "check_circle" : "radio_button_unchecked"}
@@ -366,11 +364,10 @@ export const LandingPage = () => {
                           key={intent}
                           type="button"
                           onClick={() => setSelectedIntention(intent)}
-                          className={`px-3.5 py-2 rounded-full text-xs font-semibold transition-all ${
-                            isActive
+                          className={`px-3.5 py-2 rounded-full text-xs font-semibold transition-all ${isActive
                               ? "bg-secondary-container text-on-secondary-container shadow-xs scale-105"
                               : "bg-surface-container-low text-on-surface-variant hover:bg-surface-container-high"
-                          }`}
+                            }`}
                         >
                           {intent}
                         </button>

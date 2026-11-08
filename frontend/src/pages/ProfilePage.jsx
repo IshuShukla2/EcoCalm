@@ -18,7 +18,7 @@ export const ProfilePage = () => {
 
   const [activeTab, setActiveProfileTab] = useState("overview"); // overview, achievements, favorites, privacy
   const [isEditingProfile, setIsEditingProfile] = useState(false);
-  const [profileName, setProfileName] = useState(user.name || "Maya Chen");
+  const [profileName, setProfileName] = useState(user.name || "Mindful Soul");
   const [profileTagline, setProfileTagline] = useState(user.tagline || "Gentle Pacer");
   const [dailyAffirmation, setDailyAffirmation] = useState(user.dailyAffirmation || "Today's tiny win: 10 mins offline.");
 
@@ -221,7 +221,7 @@ export const ProfilePage = () => {
               </div>
 
               <p className="text-xs sm:text-sm text-primary font-medium">
-                {user.tagline || "Gentle Pacer"} • {user.email || "maya@ecocalm.app"}
+                {user.tagline || "Gentle Pacer"} • {user.email || "visitor@ecocalm.app"}
               </p>
 
               <p className="text-xs text-on-surface-variant italic max-w-md pt-1">
@@ -322,11 +322,10 @@ export const ProfilePage = () => {
             <button
               key={t.id}
               onClick={() => setActiveProfileTab(t.id)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold transition-all shrink-0 ${
-                isActive
+              className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold transition-all shrink-0 ${isActive
                   ? "bg-primary text-on-primary shadow-xs font-bold"
                   : "bg-surface-container text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface"
-              }`}
+                }`}
             >
               <span className="material-symbols-outlined text-base">{t.icon}</span>
               <span>{t.label}</span>
@@ -465,22 +464,19 @@ export const ProfilePage = () => {
               {achievements.map((ach) => (
                 <div
                   key={ach.id}
-                  className={`p-5 rounded-2xl border transition-all flex flex-col justify-between ${
-                    ach.unlocked
+                  className={`p-5 rounded-2xl border transition-all flex flex-col justify-between ${ach.unlocked
                       ? "bg-surface-container-low border-primary/20 shadow-xs hover:-translate-y-0.5"
                       : "bg-surface-container-lowest opacity-60 border-outline-variant/20"
-                  }`}
+                    }`}
                 >
                   <div>
                     <div className="flex items-center justify-between mb-3">
-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                        ach.unlocked ? "bg-primary/10 text-primary" : "bg-surface-container text-on-surface-variant"
-                      }`}>
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${ach.unlocked ? "bg-primary/10 text-primary" : "bg-surface-container text-on-surface-variant"
+                        }`}>
                         <span className="material-symbols-outlined text-xl">{ach.icon}</span>
                       </div>
-                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${
-                        ach.unlocked ? "bg-primary-fixed text-on-primary-fixed-variant" : "bg-surface-container text-outline"
-                      }`}>
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${ach.unlocked ? "bg-primary-fixed text-on-primary-fixed-variant" : "bg-surface-container text-outline"
+                        }`}>
                         {ach.unlocked ? "Unlocked" : "Locked"}
                       </span>
                     </div>

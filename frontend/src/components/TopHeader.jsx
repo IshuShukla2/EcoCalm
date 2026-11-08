@@ -4,6 +4,7 @@ import { useEcoCalm } from "../context/EcoCalmContext";
 export const TopHeader = () => {
   const {
     user,
+    plant,
     isAdmin,
     activeTab,
     setMobileMenuOpen,
@@ -21,9 +22,9 @@ export const TopHeader = () => {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
 
   const notifications = [
-    { id: 1, title: "Sir Photosynth-is is cozy", time: "10m ago", icon: "potted_plant" },
-    { id: 2, title: "Offline milestone: 45m logged today", time: "1h ago", icon: "eco" },
-    { id: 3, title: "Daisy stitches liked your mindful pace", time: "2h ago", icon: "favorite" }
+    { id: 1, title: `${plant?.name || "Your plant"} is growing nicely`, time: "Just now", icon: "potted_plant" },
+    { id: 2, title: `Offline streak: ${user?.calmStreakDays || 1} day active`, time: "1h ago", icon: "eco" },
+    { id: 3, title: "Mindful water drops ready to hydrate", time: "2h ago", icon: "water_drop" }
   ];
 
   return (
@@ -84,11 +85,10 @@ export const TopHeader = () => {
         {isAdmin && (
           <button
             onClick={() => setActiveTab("admin")}
-            className={`hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all shadow-xs ${
-              activeTab === "admin"
+            className={`hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all shadow-xs ${activeTab === "admin"
                 ? "bg-[#3b6637] text-white"
                 : "bg-surface-container text-[#3b6637] hover:bg-surface-container-high border border-[#3b6637]/30"
-            }`}
+              }`}
           >
             <span className="material-symbols-outlined text-sm">shield</span>
             <span>Admin</span>
@@ -99,11 +99,10 @@ export const TopHeader = () => {
         <button
           onClick={() => toggleSoundscape(currentSound)}
           title={isAudioPlaying ? "Pause Soundscape" : "Play Gentle Soundscape"}
-          className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-            isAudioPlaying
+          className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${isAudioPlaying
               ? "bg-primary-container text-on-primary-container shadow-xs animate-pulse"
               : "bg-surface-container text-on-surface-variant hover:bg-surface-container-high"
-          }`}
+            }`}
         >
           <span className="material-symbols-outlined text-sm">
             {isAudioPlaying ? "volume_up" : "volume_off"}

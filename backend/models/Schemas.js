@@ -48,6 +48,7 @@ const PlantSchema = new mongoose.Schema({
   flowerType: { type: String, default: "rose_bud" }, // rose_bud, cherry_blossom, sunflower, lavender, star_jasmine, lotus
   companion: { type: String, default: "butterfly" }, // butterfly, honeybee, hummingbird, ladybug, firefly, dragonfly
   companionName: { type: String, default: "Blue Morpho" },
+  hasSelectedSeed: { type: Boolean, default: false },
   lastWatered: { type: String, default: "Just now" },
   milestones: [{ stage: Number, title: String, desc: String, completed: Boolean, isCurrent: Boolean }]
 }, { timestamps: true });
